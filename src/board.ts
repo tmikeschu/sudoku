@@ -1,6 +1,6 @@
 import { Row, Column, Coordinate, Board } from "./types";
 
-const SQUARES: [Coordinate[], Coordinate[], Coordinate[]][] = [
+export const SQUARES: [Coordinate[], Coordinate[], Coordinate[]][] = [
   [
     ["1,1", "1,2", "1,3"],
     ["2,1", "2,2", "2,3"],
@@ -50,8 +50,12 @@ const SQUARES: [Coordinate[], Coordinate[], Coordinate[]][] = [
 
 const COORDINATES: Coordinate[] = Object.values(SQUARES).flat(2).sort();
 
-const ROWS = COORDINATES.reduce((acc, coord) => {
-  const [row] = coord.split(",") as [Row, Column];
+const parseCoordinate = (raw: string): [Row, Column] => {
+  return raw.split(",").map(Number) as [Row, Column];
+};
+
+export const ROWS = COORDINATES.reduce((acc, coord) => {
+  const [row] = parseCoordinate(coord);
   if (!acc.has(row)) {
     acc.set(row, []);
   }
@@ -60,7 +64,7 @@ const ROWS = COORDINATES.reduce((acc, coord) => {
 }, new Map() as Map<Row, Coordinate[]>);
 
 const COLUMNS = COORDINATES.reduce((acc, coord) => {
-  const [, col] = coord.split(",") as [Row, Column];
+  const [, col] = parseCoordinate(coord);
   if (!acc.has(col)) {
     acc.set(col, []);
   }
@@ -79,7 +83,7 @@ function getPeerValues(board: Board, coordinate: Coordinate): number[] {
   const square = SQUARE_MAP.get(coordinate);
   if (square == null) return [];
 
-  const [row, col] = coordinate.split(",") as [Row, Column];
+  const [row, col] = parseCoordinate(coordinate);
   const peers = new Set([
     ...(ROWS.get(row) ?? []),
     ...(COLUMNS.get(col) ?? []),

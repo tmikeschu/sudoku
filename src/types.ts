@@ -1,8 +1,8 @@
-export const COLUMNS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
-export type Column = (typeof COLUMNS)[number];
+export const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
-export const ROWS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
-export type Row = (typeof ROWS)[number];
+export type Column = (typeof NUMBERS)[number];
+
+export type Row = (typeof NUMBERS)[number];
 
 export type Coordinate = `${Row},${Column}`;
 
