@@ -75,9 +75,9 @@ const SQUARE_MAP = SQUARES.reduce((acc, value, key) => {
   return acc;
 }, new Map() as Map<Coordinate, number>);
 
-function isValid(board: Board, coordinate: Coordinate, num: number): boolean {
+function getPeerValues(board: Board, coordinate: Coordinate): number[] {
   const square = SQUARE_MAP.get(coordinate);
-  if (square == null) return false;
+  if (square == null) return [];
 
   const [row, col] = coordinate.split(",") as [Row, Column];
   const peers = new Set([
@@ -85,18 +85,32 @@ function isValid(board: Board, coordinate: Coordinate, num: number): boolean {
     ...(COLUMNS.get(col) ?? []),
     ...SQUARES[square].flat(),
   ]);
-  const peerNums = [...new Set([...peers].map((c) => board.get(c)?.value))];
 
-  return !peerNums.includes(num);
+  return [...new Set([...peers].map((c) => board.get(c)?.value))].filter(
+    (x): x is number => typeof x === "number"
+  );
+}
+
+function isValidCoordinate(coordinate: Coordinate): boolean {
+  const square = SQUARE_MAP.get(coordinate);
+  return square != null;
+}
+
+function isValid(board: Board, coordinate: Coordinate, num: number): boolean {
+  if (!isValidCoordinate(coordinate)) return false;
+
+  const peerValues = getPeerValues(board, coordinate);
+  return !peerValues.includes(num);
 }
 
 function fillBoard(board: Board): Board {
   const copy = new Map(JSON.parse(JSON.stringify([...board]))) as Board;
 
   for (const coord of COORDINATES) {
-    const randomNums = Array.from({ length: 9 }, (_, k) => k + 1).sort(
-      () => Math.random() - 0.5
-    );
+    const peerValues = getPeerValues(board, coord);
+    const randomNums = Array.from({ length: 9 }, (_, k) => k + 1)
+      .filter((x) => !peerValues.includes(x))
+      .sort(() => Math.random() - 0.5);
 
     for (const num of randomNums) {
       if (isValid(copy, coord, num)) {

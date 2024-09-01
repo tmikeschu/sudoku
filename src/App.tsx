@@ -1,4 +1,4 @@
-import { Heading, Grid, Flex, Tooltip } from "@radix-ui/themes";
+import { Heading, Grid, Flex } from "@radix-ui/themes";
 import { useMachine } from "@xstate/react";
 import { sudokuMachine } from "./machine";
 
@@ -36,13 +36,11 @@ function App() {
                 background: cell.value === 0 ? "white" : "lightgray",
               }}
             >
-              <Tooltip content={JSON.stringify(cell.info ?? {})}>
-                <Flex justify="center" align="center">
-                  {cell.value === 0
-                    ? state.context.guesses.get(coordinate) ?? ""
-                    : cell.value}
-                </Flex>
-              </Tooltip>
+              <Flex justify="center" align="center">
+                {cell.value === 0
+                  ? state.context.guesses.get(coordinate) ?? ""
+                  : cell.value}
+              </Flex>
             </Grid>
           ))}
       </Grid>
