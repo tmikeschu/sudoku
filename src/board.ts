@@ -1,105 +1,148 @@
-type Column = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I";
+import { Row, Column, Coordinate, Board } from "./types";
 
-type Square = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I";
+const SQUARES: [Coordinate[], Coordinate[], Coordinate[]][] = [
+  [
+    ["1,1", "1,2", "1,3"],
+    ["2,1", "2,2", "2,3"],
+    ["3,1", "3,2", "3,3"],
+  ],
+  [
+    ["1,4", "1,5", "1,6"],
+    ["2,4", "2,5", "2,6"],
+    ["3,4", "3,5", "3,6"],
+  ],
+  [
+    ["1,7", "1,8", "1,9"],
+    ["2,7", "2,8", "2,9"],
+    ["3,7", "3,8", "3,9"],
+  ],
+  [
+    ["4,1", "4,2", "4,3"],
+    ["5,1", "5,2", "5,3"],
+    ["6,1", "6,2", "6,3"],
+  ],
+  [
+    ["4,4", "4,5", "4,6"],
+    ["5,4", "5,5", "5,6"],
+    ["6,4", "6,5", "6,6"],
+  ],
+  [
+    ["4,7", "4,8", "4,9"],
+    ["5,7", "5,8", "5,9"],
+    ["6,7", "6,8", "6,9"],
+  ],
+  [
+    ["7,1", "7,2", "7,3"],
+    ["8,1", "8,2", "8,3"],
+    ["9,1", "9,2", "9,3"],
+  ],
+  [
+    ["7,4", "7,5", "7,6"],
+    ["8,4", "8,5", "8,6"],
+    ["9,4", "9,5", "9,6"],
+  ],
+  [
+    ["7,7", "7,8", "7,9"],
+    ["8,7", "8,8", "8,9"],
+    ["9,7", "9,8", "9,9"],
+  ],
+];
 
-type Row = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+const COORDINATES: Coordinate[] = Object.values(SQUARES).flat(2).sort();
 
-type Cell = `${Column}${Row}`;
-
-const SQUARES: Record<Square, Set<Cell>> = {
-  A: new Set(["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"]),
-  B: new Set(["A4", "A5", "A6", "B4", "B5", "B6", "C4", "C5", "C6"]),
-  C: new Set(["A7", "A8", "A9", "B7", "B8", "B9", "C7", "C8", "C9"]),
-  D: new Set(["D1", "D2", "D3", "E1", "E2", "E3", "F1", "F2", "F3"]),
-  E: new Set(["D4", "D5", "D6", "E4", "E5", "E6", "F4", "F5", "F6"]),
-  F: new Set(["D7", "D8", "D9", "E7", "E8", "E9", "F7", "F8", "F9"]),
-  G: new Set(["G1", "G2", "G3", "H1", "H2", "H3", "I1", "I2", "I3"]),
-  H: new Set(["G4", "G5", "G6", "H4", "H5", "H6", "I4", "I5", "I6"]),
-  I: new Set(["G7", "G8", "G9", "H7", "H8", "H9", "I7", "I8", "I9"]),
-};
-
-const CELLS: Cell[] = Object.values(SQUARES).flatMap((squares) =>
-  Array.from(squares)
-);
-
-const ROWS = CELLS.reduce((acc, cell) => {
-  const row = cell[1] as Row;
-  acc[row] = acc[row] || [];
-  acc[row].push(cell);
+const ROWS = COORDINATES.reduce((acc, coord) => {
+  const [row] = coord.split(",") as [Row, Column];
+  if (!acc.has(row)) {
+    acc.set(row, []);
+  }
+  acc.get(row)?.push(coord);
   return acc;
-}, {} as Record<Row, Cell[]>);
+}, new Map() as Map<Row, Coordinate[]>);
 
-const COLUMNS = CELLS.reduce((acc, cell) => {
-  const col = cell[0] as Column;
-  acc[col] = acc[col] || [];
-  acc[col].push(cell);
+const COLUMNS = COORDINATES.reduce((acc, coord) => {
+  const [, col] = coord.split(",") as [Row, Column];
+  if (!acc.has(col)) {
+    acc.set(col, []);
+  }
+  acc.get(col)?.push(coord);
   return acc;
-}, {} as Record<Column, Cell[]>);
+}, new Map() as Map<Column, Coordinate[]>);
 
-const SQUARE_MAP = Object.entries(SQUARES).reduce((acc, [key, value]) => {
-  for (const cell of value) {
-    acc[cell] = key as Square;
+const SQUARE_MAP = SQUARES.reduce((acc, value, key) => {
+  for (const cell of value.flat()) {
+    acc.set(cell, key);
   }
   return acc;
-}, {} as Record<Cell, Square>);
+}, new Map() as Map<Coordinate, number>);
 
-type CellValue =
-  | { type: "base"; value: number }
-  | { type: "guess"; value: number };
-type Board = Record<Cell, CellValue>;
+function isValid(board: Board, coordinate: Coordinate, num: number): boolean {
+  const square = SQUARE_MAP.get(coordinate);
+  if (square == null) return false;
 
-function isValid(board: Board, cell: Cell, num: number): boolean {
-  const [col, row] = cell.split("") as [Column, Row];
+  const [row, col] = coordinate.split(",") as [Row, Column];
+  const peers = new Set([
+    ...(ROWS.get(row) ?? []),
+    ...(COLUMNS.get(col) ?? []),
+    ...SQUARES[square].flat(),
+  ]);
+  const peerNums = [...new Set([...peers].map((c) => board.get(c)?.value))];
 
-  const peers = [...ROWS[row], ...COLUMNS[col], ...SQUARES[SQUARE_MAP[cell]]];
-  const peerNums = peers.map((c) => board[c].value);
-
-  if (peerNums.includes(num)) {
-    return false;
-  }
-
-  return true;
+  return !peerNums.includes(num);
 }
 
-function fillBoard(board: Board): boolean {
-  for (const cell of CELLS) {
-    if (board[cell].value === 0) {
-      const randomNums = Array.from({ length: 9 }, (_, k) => k + 1).sort(
-        () => Math.random() - 0.5
-      );
+function fillBoard(board: Board): Board {
+  const copy = new Map(JSON.parse(JSON.stringify([...board]))) as Board;
 
-      for (const num of randomNums) {
-        if (isValid(board, cell, num)) {
-          board[cell] = { type: "base", value: num };
-          if (fillBoard(board)) {
-            return true;
-          }
-          board[cell] = { type: "base", value: 0 };
-        }
+  for (const coord of COORDINATES) {
+    const randomNums = Array.from({ length: 9 }, (_, k) => k + 1).sort(
+      () => Math.random() - 0.5
+    );
+
+    for (const num of randomNums) {
+      if (isValid(copy, coord, num)) {
+        const [row, col] = coord.split(",").map(Number);
+        copy.set(coord, {
+          value: num,
+          info: {
+            original: num,
+            leftSquare: col % 3 === 1,
+            leftBoard: col === 1,
+            topSquare: row % 3 === 1,
+            topBoard: row === 1,
+            rightSquare: col % 3 === 0,
+            rightBoard: col === 9,
+            bottomSquare: row % 3 === 0,
+            bottomBoard: row === 9,
+          },
+        });
+        break;
       }
-      return false;
+    }
+    if (copy.get(coord)?.value === 0) {
+      return fillBoard(board);
     }
   }
-  return true;
+
+  return copy;
 }
 
 function generateCompleteBoard(): Board {
-  const board: Board = CELLS.reduce((acc, cell) => {
-    acc[cell] = { type: "base", value: 0 };
+  const board: Board = COORDINATES.reduce((acc, coordinate) => {
+    acc.set(coordinate, { value: 0 });
     return acc;
-  }, {} as Board);
+  }, new Map() as Board);
 
-  fillBoard(board);
-
-  return board;
+  return fillBoard(board);
 }
 
 function removeNumbers(board: Board, numHoles: number): Board {
   let holes = 0;
   while (holes < numHoles) {
-    const cell = CELLS[Math.floor(Math.random() * CELLS.length)];
-    if (board[cell].value !== 0) {
-      board[cell] = { type: "guess", value: 0 };
+    const coordinate =
+      COORDINATES[Math.floor(Math.random() * COORDINATES.length)];
+    const cell = board.get(coordinate);
+    if (cell && cell.value !== 0) {
+      board.set(coordinate, { ...cell, value: 0 });
       holes++;
     }
   }
