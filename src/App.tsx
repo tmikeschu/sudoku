@@ -6,94 +6,117 @@ import {
   BOARD_TEMPLATE_AREAS,
   coordinateToGridArea,
   getSquareTemplateAreas,
+  getSquareGridColumn,
+  getSquareGridRow,
+  getHighlightedCoordinates,
+  getSquareGridShading,
 } from "./style-utils";
-import { SQUARES } from "./board";
+import { isGuessable, SQUARES } from "./board";
 
 function App() {
   const [state, send] = useMachine(sudokuMachine);
 
+  const highlights = getHighlightedCoordinates(state);
+
   return (
-    <>
+    <Flex direction="column" gapY="4">
       <Heading>Sudoku</Heading>
-      <Flex gapY="4" direction="column">
-        <Grid
-          width="fit-content"
-          rows="repeat(3, 104px)"
-          columns="repeat(3, 104px)"
-          areas={BOARD_TEMPLATE_AREAS}
-          gap="2"
-          align="start"
-        >
-          {SQUARES.map((square, i) => (
-            <Grid
-              key={i}
-              rows="repeat(3, 32px)"
-              columns="repeat(3, 32px)"
-              gridArea={`s${i}`}
-              gap="1"
-              areas={getSquareTemplateAreas(square)}
-            >
-              {square.flat().map((coordinate) => {
-                const cell = state.context.board.get(coordinate);
-                if (!cell) return null;
 
-                return (
-                  <Button
-                    key={coordinate}
-                    style={{ gridArea: coordinateToGridArea(coordinate) }}
-                    onClick={() => send({ type: "CLICK_CELL", coordinate })}
-                    {...(cell.value === 0
-                      ? {
-                          variant: "outline",
-                          color:
-                            state.context.currentNumber &&
-                            state.context.guesses.get(coordinate) ===
-                              state.context.currentNumber
-                              ? "teal"
-                              : "gray",
-                        }
-                      : {
-                          variant: "soft",
-                          // highContrast: true,
-                          color:
-                            cell.value === state.context.currentNumber
-                              ? "teal"
-                              : "gray",
-                        })}
-                  >
-                    {cell.value === 0 ? (
-                      <Flex justify="center" align="center">
-                        <Text>
-                          {state.context.guesses.get(coordinate) ?? ""}
-                        </Text>
-                      </Flex>
-                    ) : (
-                      <Flex justify="center" align="center">
-                        <Text>{cell.value}</Text>
-                      </Flex>
-                    )}
-                  </Button>
-                );
-              })}
-            </Grid>
-          ))}
-        </Grid>
+      <Grid
+        width="fit-content"
+        rows="repeat(9, 32px)"
+        columns="repeat(9, 32px)"
+        areas={BOARD_TEMPLATE_AREAS}
+        gap="2"
+        align="start"
+      >
+        {SQUARES.map((square, i) => (
+          <Grid
+            key={i}
+            rows="repeat(3, 32px)"
+            columns="repeat(3, 32px)"
+            gap="2"
+            gridColumn={getSquareGridColumn(square)}
+            gridRow={getSquareGridRow(square)}
+            areas={getSquareTemplateAreas(square)}
+          >
+            {square.flat().map((coordinate) => {
+              const cell = state.context.board.get(coordinate);
+              if (!cell) return null;
 
-        <Flex gap="1">
-          {NUMBERS.map((num) => (
-            <Button
-              key={num}
-              variant={
-                state.context.currentNumber === num ? "solid" : "outline"
-              }
-              onClick={() => send({ type: "SET_CURRENT_NUMBER", number: num })}
-            >
-              {num}
-            </Button>
-          ))}
-        </Flex>
+              return (
+                <Button
+                  key={coordinate}
+                  style={{ gridArea: coordinateToGridArea(coordinate) }}
+                  onClick={() => send({ type: "CLICK_CELL", coordinate })}
+                  {...(coordinate === state.context.fillCoordinate
+                    ? { variant: "surface" }
+                    : isGuessable(cell)
+                    ? { variant: "outline" }
+                    : { variant: "soft" })}
+                >
+                  {isGuessable(cell) ? (
+                    <Flex justify="center" align="center">
+                      <Text>{state.context.guesses.get(coordinate) ?? ""}</Text>
+                    </Flex>
+                  ) : (
+                    <Flex justify="center" align="center">
+                      <Text>{cell.value}</Text>
+                    </Flex>
+                  )}
+                </Button>
+              );
+            })}
+          </Grid>
+        ))}
+        {highlights.map(({ gridColumn, gridRow }) => (
+          <Grid
+            key={`${gridRow},${gridColumn}`}
+            aria-label={`${gridRow},${gridColumn} highlight`}
+            style={{
+              backgroundColor: "var(--accent-a7)",
+              opacity: 0.5,
+              zIndex: -1,
+              borderRadius: "4px",
+            }}
+            gridColumn={gridColumn}
+            gridRow={gridRow}
+            height="100%"
+            width="100%"
+          />
+        ))}
+
+        {SQUARES.filter((_, i) => i % 2 === 1).map((square, i) => (
+          <Grid
+            key={i}
+            style={{
+              // TODO figure out how to get padding on square borders
+              border: "2px solid var(--accent-a6)",
+              zIndex: -1,
+              justifySelf: "end",
+              borderRadius: "4px",
+              marginTop: "-5px",
+              marginRight: "-5px",
+            }}
+            {...getSquareGridShading(square)}
+            height="calc(100% + 10px)"
+            width="calc(100% + 10px)"
+          />
+        ))}
+      </Grid>
+
+      <Flex gap="2">
+        {NUMBERS.map((num) => (
+          <Button
+            key={num}
+            variant={state.context.fillNumber === num ? "solid" : "outline"}
+            onClick={() => send({ type: "CLICK_FILL_NUMBER", number: num })}
+          >
+            {num}
+          </Button>
+        ))}
       </Flex>
-    </>
+    </Flex>
   );
 }
 

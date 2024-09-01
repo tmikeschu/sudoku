@@ -1,4 +1,4 @@
-import { Row, Column, Coordinate, Board } from "./types";
+import { Row, Column, Coordinate, Board, Cell } from "./types";
 
 export type Square = [Coordinate[], Coordinate[], Coordinate[]];
 
@@ -52,7 +52,7 @@ export const SQUARES: Square[] = [
 
 const COORDINATES: Coordinate[] = Object.values(SQUARES).flat(2).sort();
 
-const parseCoordinate = (raw: string): [Row, Column] => {
+export const parseCoordinate = (raw: string): [Row, Column] => {
   return raw.split(",").map(Number) as [Row, Column];
 };
 
@@ -65,7 +65,7 @@ export const ROWS = COORDINATES.reduce((acc, coord) => {
   return acc;
 }, new Map() as Map<Row, Coordinate[]>);
 
-const COLUMNS = COORDINATES.reduce((acc, coord) => {
+export const COLUMNS = COORDINATES.reduce((acc, coord) => {
   const [, col] = parseCoordinate(coord);
   if (!acc.has(col)) {
     acc.set(col, []);
@@ -120,25 +120,14 @@ function fillBoard(board: Board): Board {
 
     for (const num of randomNums) {
       if (isValid(copy, coord, num)) {
-        const [row, col] = coord.split(",").map(Number);
         copy.set(coord, {
           value: num,
-          info: {
-            original: num,
-            leftSquare: col % 3 === 1,
-            leftBoard: col === 1,
-            topSquare: row % 3 === 1,
-            topBoard: row === 1,
-            rightSquare: col % 3 === 0,
-            rightBoard: col === 9,
-            bottomSquare: row % 3 === 0,
-            bottomBoard: row === 9,
-          },
+          meta: { original: num },
         });
         break;
       }
     }
-    if (copy.get(coord)?.value === 0) {
+    if (isGuessable(copy.get(coord))) {
       return fillBoard(board);
     }
   }
@@ -181,4 +170,8 @@ export function generateSudoku(difficulty: Difficulty): Board {
   const board = generateCompleteBoard();
   const puzzle = removeNumbers(board, DIFFICULTY_LEVELS[difficulty]);
   return puzzle;
+}
+
+export function isGuessable(cell?: Cell) {
+  return cell?.value === 0;
 }
