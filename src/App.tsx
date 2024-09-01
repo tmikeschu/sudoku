@@ -91,7 +91,7 @@ function App() {
             key={i}
             style={{
               // TODO figure out how to get padding on square borders
-              border: "2px solid var(--accent-a6)",
+              border: "2px solid var(--gray-a6)",
               zIndex: -1,
               justifySelf: "end",
               borderRadius: "4px",
