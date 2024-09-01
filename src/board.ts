@@ -1,6 +1,8 @@
 import { Row, Column, Coordinate, Board } from "./types";
 
-export const SQUARES: [Coordinate[], Coordinate[], Coordinate[]][] = [
+export type Square = [Coordinate[], Coordinate[], Coordinate[]];
+
+export const SQUARES: Square[] = [
   [
     ["1,1", "1,2", "1,3"],
     ["2,1", "2,2", "2,3"],
