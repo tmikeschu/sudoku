@@ -105,17 +105,18 @@ function App() {
         ))}
       </Grid>
 
-      <Flex gap="2">
+      <Grid gap="2" columns="repeat(9, 32px)" width="fit-content">
         {NUMBERS.map((num) => (
           <Button
             key={num}
-            variant={state.context.fillNumber === num ? "solid" : "outline"}
+            color={state.context.fillNumber === num ? undefined : "gray"}
+            variant={state.context.fillNumber === num ? "solid" : "surface"}
             onClick={() => send({ type: "CLICK_FILL_NUMBER", number: num })}
           >
             {num}
           </Button>
         ))}
-      </Flex>
+      </Grid>
     </Flex>
   );
 }
