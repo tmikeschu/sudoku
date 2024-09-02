@@ -1,4 +1,5 @@
-import { Row, Column, Coordinate, Board, Cell } from "./types";
+import { GameSnapshot } from "./gameMachine";
+import { Row, Column, Coordinate, Board, Cell } from "../types";
 
 export type Square = [Coordinate[], Coordinate[], Coordinate[]];
 
@@ -81,7 +82,7 @@ const SQUARE_MAP = SQUARES.reduce((acc, value, key) => {
   return acc;
 }, new Map() as Map<Coordinate, number>);
 
-function getPeerValues(board: Board, coordinate: Coordinate): number[] {
+function getPeerCoordinates(coordinate: Coordinate): Coordinate[] {
   const square = SQUARE_MAP.get(coordinate);
   if (square == null) return [];
 
@@ -91,6 +92,12 @@ function getPeerValues(board: Board, coordinate: Coordinate): number[] {
     ...(COLUMNS.get(col) ?? []),
     ...SQUARES[square].flat(),
   ]);
+
+  return [...peers].filter((coord) => coord !== coordinate);
+}
+
+function getPeerValues(board: Board, coordinate: Coordinate): number[] {
+  const peers = getPeerCoordinates(coordinate);
 
   return [...new Set([...peers].map((c) => board.get(c)?.value))].filter(
     (x): x is number => typeof x === "number"
@@ -158,7 +165,7 @@ function removeNumbers(board: Board, numHoles: number): Board {
   return board;
 }
 
-type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty = "easy" | "medium" | "hard";
 
 const DIFFICULTY_LEVELS: Record<Difficulty, number> = {
   easy: 40,
@@ -174,4 +181,16 @@ export function generateSudoku(difficulty: Difficulty): Board {
 
 export function isGuessable(cell?: Cell) {
   return cell?.value === 0;
+}
+
+export function getInvalidCoordinates(snapshot: GameSnapshot): Coordinate[] {
+  const { board, guesses } = snapshot.context;
+
+  return [...guesses.entries()]
+    .filter(([coord, guess]) => {
+      const cell = board.get(coord);
+      if (!cell) return false;
+      return cell.meta?.original !== guess;
+    })
+    .map(([coord]) => coord);
 }

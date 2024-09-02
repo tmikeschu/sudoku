@@ -1,7 +1,13 @@
 import { ButtonProps } from "@radix-ui/themes";
-import { COLUMNS, isGuessable, parseCoordinate, ROWS, Square } from "./board";
-import { SudokuSnapshot } from "./machine";
-import { Coordinate } from "./types";
+import {
+  COLUMNS,
+  isGuessable,
+  parseCoordinate,
+  ROWS,
+  Square,
+} from "./board";
+import { GameSnapshot } from "./gameMachine";
+import { Coordinate } from "../types";
 
 export const coordinateToGridArea = (coordinate: Coordinate): string => {
   return `c${coordinate.replace(",", "")}`;
@@ -26,19 +32,19 @@ export const BOARD_TEMPLATE_AREAS = [...ROWS.entries()]
   .join(" ");
 
 export const shouldHighlightSquare = (
-  snapshot: SudokuSnapshot,
+  snapshot: GameSnapshot,
   coordinate: Coordinate
 ): boolean => {
   const cell = snapshot.context.board.get(coordinate);
   if (!cell) return false;
 
-  if (snapshot.value === "fill") {
+  if (snapshot.matches("fill")) {
     const { fillNumber, guesses } = snapshot.context;
     const value = isGuessable(cell) ? guesses.get(coordinate) : cell.value;
     return fillNumber !== undefined && value === fillNumber;
   }
 
-  if (snapshot.value === "coordinate" && snapshot.context.fillCoordinate) {
+  if (snapshot.matches("coordinate") && snapshot.context.fillCoordinate) {
     const { fillCoordinate } = snapshot.context;
     const [fillRow, fillColumn] = parseCoordinate(fillCoordinate);
     const [row, column] = parseCoordinate(coordinate);
@@ -50,36 +56,36 @@ export const shouldHighlightSquare = (
 };
 
 export const getCellHighlightColor = (
-  snapshot: SudokuSnapshot,
+  snapshot: GameSnapshot,
   coordinate: Coordinate
 ): ButtonProps["color"] => {
   if (!shouldHighlightSquare(snapshot, coordinate)) return "gray";
 
-  const { value } = snapshot;
   const { fillCoordinate } = snapshot.context;
-  if (value === "coordinate" && fillCoordinate === coordinate) return "blue";
+  if (snapshot.matches("coordinate") && fillCoordinate === coordinate)
+    return "blue";
 
   return "teal";
 };
 
 export const getHighlightedCoordinates = (
-  snapshot: SudokuSnapshot
+  snapshot: GameSnapshot
 ): { gridColumn: string; gridRow: string }[] => {
-  const { value, context } = snapshot;
+  const { context } = snapshot;
   const { fillCoordinate } = context;
 
   const toGridDef = (coord: Coordinate) => {
     const area = coordinateToGridArea(coord);
     return { gridColumn: area, gridRow: area };
   };
-  if (value === "coordinate" && fillCoordinate) {
+  if (snapshot.matches("coordinate") && fillCoordinate) {
     const [row, col] = parseCoordinate(fillCoordinate);
     return [
       ...new Set([...(ROWS.get(row) ?? []), ...(COLUMNS.get(col) ?? [])]),
     ].map(toGridDef);
   }
 
-  if (value === "fill" && context.fillNumber) {
+  if (snapshot.matches("fill") && context.fillNumber) {
     const { fillNumber, guesses, board } = context;
     const matches = [...board.entries()]
       .filter(([coord, cell]) =>
