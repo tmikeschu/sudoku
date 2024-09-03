@@ -216,3 +216,11 @@ export function getInvalidCoordinates(snapshot: GameSnapshot): Coordinate[] {
         .map((x) => x.coordinate),
     ]);
 }
+
+export const getBoardValueString = (board: Board): string => {
+  return [...board.values()].map((cell) => cell.value).join("");
+};
+
+export const getBoardSolutionString = (board: Board): string => {
+  return [...board.values()].map((cell) => cell.meta?.original).join("");
+};

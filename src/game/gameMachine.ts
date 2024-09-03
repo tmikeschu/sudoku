@@ -34,23 +34,25 @@ export const gameMachine = setup({
   },
   actions: {
     setFillNumber: assign({
-      fillNumber: (_, params: { number: number }) => {
-        return params.number;
-      },
+      fillNumber: (_, params: { number: number }) => params.number,
     }),
     clearFillNumber: assign({ fillNumber: undefined }),
     setFillCoordinate: assign({
-      fillCoordinate: (_, params: { coordinate: Coordinate }) => {
-        return params.coordinate;
-      },
+      fillCoordinate: (_, params: { coordinate: Coordinate }) =>
+        params.coordinate,
     }),
     clearFillCoordinate: assign({ fillCoordinate: undefined }),
     handleCellClick: assign({
-      guesses: ({ context }, params: { coordinate: Coordinate }) => {
-        const { board, guesses, fillNumber } = context;
-        const { coordinate } = params;
+      guesses: (
+        _,
+        params: { coordinate: Coordinate } & Pick<
+          Context,
+          "board" | "guesses" | "fillNumber"
+        >
+      ) => {
+        const { coordinate, board, guesses, fillNumber } = params;
 
-        if (board.get(coordinate)?.value !== 0) return context.guesses;
+        if (board.get(coordinate)?.value !== 0) return guesses;
 
         const draft = new Map(guesses);
         const guess = guesses.get(coordinate);
@@ -65,24 +67,24 @@ export const gameMachine = setup({
           return draft;
         }
 
-        return context.guesses;
+        return guesses;
       },
     }),
     setGuess: assign({
       guesses: (
-        { context },
-        params: { coordinate?: Coordinate; fillNumber?: number }
+        _,
+        params: { coordinate?: Coordinate } & Pick<
+          Context,
+          "fillNumber" | "guesses" | "board"
+        >
       ) => {
-        const { coordinate, fillNumber } = params;
+        const { coordinate, fillNumber, guesses, board } = params;
 
-        if (!coordinate || !fillNumber) return context.guesses;
+        if (!coordinate || !fillNumber) return guesses;
 
-        const { board } = context;
+        if (!coordinate || board.get(coordinate)?.value !== 0) return guesses;
 
-        if (!coordinate || board.get(coordinate)?.value !== 0)
-          return context.guesses;
-
-        const draft = new Map(context.guesses);
+        const draft = new Map(guesses);
         const guess = draft.get(coordinate);
 
         if (guess === fillNumber) {
@@ -95,8 +97,8 @@ export const gameMachine = setup({
       },
     }),
     revealPuzzle: assign({
-      guesses: ({ context }) => {
-        const originals = [...context.board.entries()].map(
+      guesses: (_, params: Pick<Context, "board">) => {
+        const originals = [...params.board.entries()].map(
           ([coord, cell]) =>
             [coord, cell.meta?.original] as [Coordinate, number]
         );
@@ -105,15 +107,23 @@ export const gameMachine = setup({
     }),
   },
   guards: {
-    clickedExistingFillNumber: ({ context }, params: { number: number }) => {
-      return context.fillNumber === params.number;
-    },
+    clickedExistingFillNumber: (
+      _,
+      params: { fillNumber?: number; number: number }
+    ) => params.fillNumber === params.number,
+
     clickedCurrentFillCoordinate: (
-      { context },
-      params: { coordinate: Coordinate }
-    ) => {
-      return context.fillCoordinate === params.coordinate;
-    },
+      _,
+      params: { coordinate: Coordinate; fillCoordinate?: Coordinate }
+    ) => params.fillCoordinate === params.coordinate,
+
+    puzzleIsComplete: (
+      _,
+      params: { board: Board; guesses: Map<Coordinate, number> }
+    ) =>
+      [...params.board.entries()].every(
+        ([coord, cell]) => cell.value === params.guesses.get(coord)
+      ),
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -122,10 +132,17 @@ export const gameMachine = setup({
     fillNumber: undefined,
     fillCoordinate: undefined,
   }),
-  on: {
-    reveal: ".confirmReveal",
-  },
+  on: { reveal: ".confirmReveal" },
   initial: "idle",
+  always: [
+    {
+      target: "gameOver",
+      guard: {
+        type: "puzzleIsComplete",
+        params: ({ context: { board, guesses } }) => ({ board, guesses }),
+      },
+    },
+  ],
   states: {
     idle: {
       on: {
@@ -153,7 +170,10 @@ export const gameMachine = setup({
             actions: "clearFillNumber",
             guard: {
               type: "clickedExistingFillNumber",
-              params: ({ event: { number } }) => ({ number }),
+              params: ({ context: { fillNumber }, event: { number } }) => ({
+                number,
+                fillNumber,
+              }),
             },
           },
           {
@@ -166,10 +186,10 @@ export const gameMachine = setup({
         "cell.click": {
           actions: {
             type: "setGuess",
-            params: ({ context: { fillNumber }, event: { coordinate } }) => ({
-              coordinate,
-              fillNumber,
-            }),
+            params: ({
+              context: { fillNumber, board, guesses },
+              event: { coordinate },
+            }) => ({ coordinate, fillNumber, board, guesses }),
           },
         },
       },
@@ -180,9 +200,9 @@ export const gameMachine = setup({
           actions: {
             type: "setGuess",
             params: ({
-              context: { fillCoordinate: coordinate },
+              context: { fillCoordinate: coordinate, board, guesses },
               event: { number: fillNumber },
-            }) => ({ coordinate, fillNumber }),
+            }) => ({ coordinate, fillNumber, board, guesses }),
           },
         },
         "cell.click": [
@@ -190,7 +210,10 @@ export const gameMachine = setup({
             target: "idle",
             guard: {
               type: "clickedCurrentFillCoordinate",
-              params: ({ event: { coordinate } }) => ({ coordinate }),
+              params: ({
+                context: { fillCoordinate },
+                event: { coordinate },
+              }) => ({ coordinate, fillCoordinate }),
             },
           },
           {
@@ -207,7 +230,13 @@ export const gameMachine = setup({
         cancel: "idle",
         confirm: {
           target: "gameOver",
-          actions: ["revealPuzzle", sendParent({ type: "gameOver" })],
+          actions: [
+            {
+              type: "revealPuzzle",
+              params: ({ context: { board } }) => ({ board }),
+            },
+            sendParent({ type: "gameOver" }),
+          ],
         },
       },
     },
