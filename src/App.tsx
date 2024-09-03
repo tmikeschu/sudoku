@@ -10,6 +10,7 @@ function App() {
   const gameRef = AppMachineContext.useSelector(
     (s) => s.context.gameMachineRef
   );
+  const board = gameRef?.getSnapshot().context.board;
 
   return (
     <Grid gapY="4">
@@ -19,9 +20,9 @@ function App() {
         <NotStarted actor={actor} />
       ) : state === "playing" && gameRef ? (
         <Game actor={gameRef} />
-      ) : (
-        <GameOver actor={actor} />
-      )}
+      ) : state === "gameOver" && board ? (
+        <GameOver actor={actor} board={board} />
+      ) : null}
     </Grid>
   );
 }

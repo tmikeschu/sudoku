@@ -1,23 +1,17 @@
 import { Grid, Flex, Button, Text, AlertDialog } from "@radix-ui/themes";
 import { GameActorRef } from "./gameMachine";
 import { NUMBERS } from "../types";
-import {
-  BOARD_TEMPLATE_AREAS,
-  coordinateToGridArea,
-  getSquareTemplateAreas,
-  getSquareGridColumn,
-  getSquareGridRow,
-  getHighlightedCoordinates,
-  getSquareGridShading,
-} from "./style-utils";
+import { getHighlightedCoordinates } from "./style-utils";
 import { getInvalidCoordinates, isGuessable, SQUARES } from "./board";
 import { useSelector } from "@xstate/react";
+import { Square } from "./Square";
+import { Cell } from "./Cell";
+import { GameBoard } from "./GameBoard";
 
 export function Game({ actor }: { actor: GameActorRef }) {
   const { send } = actor;
 
   const state = actor.getSnapshot();
-  console.log(state.value);
 
   const highlights = useSelector(actor, getHighlightedCoordinates);
 
@@ -25,32 +19,17 @@ export function Game({ actor }: { actor: GameActorRef }) {
 
   return (
     <Flex direction="column" gapY="4">
-      <Grid
-        width="fit-content"
-        rows="repeat(9, 32px)"
-        columns="repeat(9, 32px)"
-        areas={BOARD_TEMPLATE_AREAS}
-        gap="2"
-        align="start"
-      >
+      <GameBoard>
         {SQUARES.map((square, i) => (
-          <Grid
-            key={i}
-            rows="repeat(3, 32px)"
-            columns="repeat(3, 32px)"
-            gap="2"
-            gridColumn={getSquareGridColumn(square)}
-            gridRow={getSquareGridRow(square)}
-            areas={getSquareTemplateAreas(square)}
-          >
+          <Square key={i} square={square}>
             {square.flat().map((coordinate) => {
               const cell = state.context.board.get(coordinate);
               if (!cell) return null;
 
               return (
-                <Button
+                <Cell
                   key={coordinate}
-                  style={{ gridArea: coordinateToGridArea(coordinate) }}
+                  coordinate={coordinate}
                   onClick={() => send({ type: "cell.click", coordinate })}
                   color={invalids.includes(coordinate) ? "red" : undefined}
                   {...(coordinate === state.context.fillCoordinate
@@ -59,20 +38,15 @@ export function Game({ actor }: { actor: GameActorRef }) {
                     ? { variant: "outline" }
                     : { variant: "soft" })}
                 >
-                  {isGuessable(cell) ? (
-                    <Flex justify="center" align="center">
-                      <Text>{state.context.guesses.get(coordinate) ?? ""}</Text>
-                    </Flex>
-                  ) : (
-                    <Flex justify="center" align="center">
-                      <Text>{cell.value}</Text>
-                    </Flex>
-                  )}
-                </Button>
+                  {isGuessable(cell)
+                    ? state.context.guesses.get(coordinate) ?? ""
+                    : cell.value}
+                </Cell>
               );
             })}
-          </Grid>
+          </Square>
         ))}
+
         {highlights.map(({ gridColumn, gridRow }) => (
           <Grid
             key={`${gridRow},${gridColumn}`}
@@ -89,25 +63,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
             width="100%"
           />
         ))}
-
-        {SQUARES.filter((_, i) => i % 2 === 1).map((square, i) => (
-          <Grid
-            key={i}
-            style={{
-              // TODO figure out how to get padding on square borders
-              border: "2px solid var(--gray-a6)",
-              zIndex: -1,
-              justifySelf: "end",
-              borderRadius: "4px",
-              marginTop: "-5px",
-              marginRight: "-5px",
-            }}
-            {...getSquareGridShading(square)}
-            height="calc(100% + 10px)"
-            width="calc(100% + 10px)"
-          />
-        ))}
-      </Grid>
+      </GameBoard>
 
       <Grid gap="2" columns="repeat(9, 32px)" width="fit-content">
         {NUMBERS.map((num) => (
@@ -135,9 +91,9 @@ export function Game({ actor }: { actor: GameActorRef }) {
           <AlertDialog.Content>
             <AlertDialog.Title>Reveal?</AlertDialog.Title>
             <AlertDialog.Description>
-              <Text>This will end the game</Text>
+              <Text>This will end the game.</Text>
             </AlertDialog.Description>
-            <Flex align="end">
+            <Flex justify="end" gap="2">
               <AlertDialog.Cancel>
                 <Button color="gray" onClick={() => send({ type: "cancel" })}>
                   Cancel
