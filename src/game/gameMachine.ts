@@ -5,7 +5,7 @@ import {
   ActorRefFrom,
   sendParent,
 } from "xstate";
-import { Difficulty, generateSudoku } from "./board";
+import { Difficulty, generateSudoku, isGuessable } from "./board";
 import type { Coordinate, Board } from "../types";
 
 type Input = {
@@ -120,10 +120,14 @@ export const gameMachine = setup({
     puzzleIsComplete: (
       _,
       params: { board: Board; guesses: Map<Coordinate, number> }
-    ) =>
-      [...params.board.entries()].every(
-        ([coord, cell]) => cell.value === params.guesses.get(coord)
-      ),
+    ) => {
+      console.log({ board: params.board, guesses: params.guesses });
+      return [...params.board.entries()].every(([coord, cell]) =>
+        isGuessable(cell)
+          ? cell.meta?.original === params.guesses.get(coord)
+          : true
+      );
+    },
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -230,18 +234,16 @@ export const gameMachine = setup({
         cancel: "idle",
         confirm: {
           target: "gameOver",
-          actions: [
-            {
-              type: "revealPuzzle",
-              params: ({ context: { board } }) => ({ board }),
-            },
-            sendParent({ type: "gameOver" }),
-          ],
+          actions: {
+            type: "revealPuzzle",
+            params: ({ context: { board } }) => ({ board }),
+          },
         },
       },
     },
     gameOver: {
       type: "final",
+      entry: sendParent({ type: "gameOver" }),
     },
   },
 });

@@ -224,3 +224,21 @@ export const getBoardValueString = (board: Board): string => {
 export const getBoardSolutionString = (board: Board): string => {
   return [...board.values()].map((cell) => cell.meta?.original).join("");
 };
+
+export const isNumberComplete = ({
+  board,
+  guesses,
+  number,
+}: {
+  board: Board;
+  guesses: Map<Coordinate, number>;
+  number: number;
+}): boolean => {
+  return SQUARES.every((square) => {
+    const values = square.flat().map((coord) => {
+      const cell = board.get(coord);
+      return isGuessable(cell) ? guesses.get(coord) : cell?.meta?.original;
+    });
+    return values.includes(number);
+  });
+};

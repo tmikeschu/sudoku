@@ -2,7 +2,12 @@ import { Grid, Flex, Button, Text, AlertDialog } from "@radix-ui/themes";
 import { GameActorRef } from "./gameMachine";
 import { NUMBERS } from "../types";
 import { getHighlightedCoordinates } from "./style-utils";
-import { getInvalidCoordinates, isGuessable, SQUARES } from "./board";
+import {
+  getInvalidCoordinates,
+  isGuessable,
+  isNumberComplete,
+  SQUARES,
+} from "./board";
 import { useSelector } from "@xstate/react";
 import { Square } from "./Square";
 import { Cell } from "./Cell";
@@ -70,7 +75,17 @@ export function Game({ actor }: { actor: GameActorRef }) {
           <Button
             key={num}
             color={state.context.fillNumber === num ? undefined : "gray"}
-            variant={state.context.fillNumber === num ? "solid" : "surface"}
+            variant={
+              isNumberComplete({
+                board: state.context.board,
+                guesses: state.context.guesses,
+                number: num,
+              })
+                ? "classic"
+                : state.context.fillNumber === num
+                ? "solid"
+                : "surface"
+            }
             onClick={() => send({ type: "fill_number.click", number: num })}
           >
             {num}
