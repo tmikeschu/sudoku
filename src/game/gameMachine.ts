@@ -136,7 +136,7 @@ export const gameMachine = setup({
   initial: "idle",
   always: [
     {
-      target: "gameOver",
+      target: ".gameOver",
       guard: {
         type: "puzzleIsComplete",
         params: ({ context: { board, guesses } }) => ({ board, guesses }),
