@@ -96,12 +96,24 @@ function getPeerCoordinates(coordinate: Coordinate): Coordinate[] {
   return [...peers].filter((coord) => coord !== coordinate);
 }
 
-function getPeerValues(board: Board, coordinate: Coordinate): number[] {
+function getPeers(
+  board: Board,
+  coordinate: Coordinate
+): { coordinate: Coordinate; value: number }[] {
   const peers = getPeerCoordinates(coordinate);
 
-  return [...new Set([...peers].map((c) => board.get(c)?.value))].filter(
-    (x): x is number => typeof x === "number"
+  return [
+    ...new Set(
+      [...peers].map((c) => ({ coordinate: c, value: board.get(c)?.value }))
+    ),
+  ].filter(
+    (x): x is { coordinate: Coordinate; value: number } =>
+      typeof x.value === "number"
   );
+}
+
+function getPeerValues(board: Board, coordinate: Coordinate): number[] {
+  return getPeers(board, coordinate).map(({ value }) => value);
 }
 
 function isValidCoordinate(coordinate: Coordinate): boolean {
@@ -186,11 +198,21 @@ export function isGuessable(cell?: Cell) {
 export function getInvalidCoordinates(snapshot: GameSnapshot): Coordinate[] {
   const { board, guesses } = snapshot.context;
 
+  const peerMap = [...guesses.entries()].reduce((acc, [coord]) => {
+    acc[coord] = getPeers(board, coord);
+    return acc;
+  }, {} as Record<Coordinate, { coordinate: Coordinate; value: number }[]>);
+
   return [...guesses.entries()]
     .filter(([coord, guess]) => {
       const cell = board.get(coord);
       if (!cell) return false;
-      return cell.meta?.original !== guess;
+      return peerMap[coord].map(({ value }) => value).includes(guess);
     })
-    .map(([coord]) => coord);
+    .flatMap(([coord, guess]) => [
+      coord,
+      ...peerMap[coord]
+        .filter((x) => x.value === guess)
+        .map((x) => x.coordinate),
+    ]);
 }
