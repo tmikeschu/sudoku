@@ -13,7 +13,7 @@ function App() {
   const board = gameRef?.getSnapshot().context.board;
 
   return (
-    <Grid gapY="4">
+    <Grid gapY="4" maxWidth="352px" align="center" justify="center" mx="auto">
       <Heading>Sudoku</Heading>
 
       {state === "notStarted" ? (

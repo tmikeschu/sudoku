@@ -18,7 +18,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
   const invalids = useSelector(actor, getInvalidCoordinates);
 
   return (
-    <Flex direction="column" gapY="4">
+    <Flex direction="column" gapY="4" align={"center"}>
       <GameBoard>
         {SQUARES.map((square, i) => (
           <Square key={i} square={square}>
@@ -76,38 +76,37 @@ export function Game({ actor }: { actor: GameActorRef }) {
             {num}
           </Button>
         ))}
-
-        <AlertDialog.Root open={state.matches("confirmReveal")}>
-          <AlertDialog.Trigger>
-            <Button
-              variant="ghost"
-              color="red"
-              onClick={() => send({ type: "reveal" })}
-            >
-              Reveal
-            </Button>
-          </AlertDialog.Trigger>
-
-          <AlertDialog.Content>
-            <AlertDialog.Title>Reveal?</AlertDialog.Title>
-            <AlertDialog.Description>
-              <Text>This will end the game.</Text>
-            </AlertDialog.Description>
-            <Flex justify="end" gap="2">
-              <AlertDialog.Cancel>
-                <Button color="gray" onClick={() => send({ type: "cancel" })}>
-                  Cancel
-                </Button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action>
-                <Button color="red" onClick={() => send({ type: "confirm" })}>
-                  Reveal
-                </Button>
-              </AlertDialog.Action>
-            </Flex>
-          </AlertDialog.Content>
-        </AlertDialog.Root>
       </Grid>
+
+      <Flex justify="end">
+        <Button
+          variant="ghost"
+          color="red"
+          onClick={() => send({ type: "reveal" })}
+        >
+          Reveal
+        </Button>
+      </Flex>
+      <AlertDialog.Root open={state.matches("confirmReveal")}>
+        <AlertDialog.Content>
+          <AlertDialog.Title>Reveal?</AlertDialog.Title>
+          <AlertDialog.Description>
+            <Text>This will end the game.</Text>
+          </AlertDialog.Description>
+          <Flex justify="end" gap="2">
+            <AlertDialog.Cancel>
+              <Button color="gray" onClick={() => send({ type: "cancel" })}>
+                Cancel
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button color="red" onClick={() => send({ type: "confirm" })}>
+                Reveal
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Flex>
   );
 }
