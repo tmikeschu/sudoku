@@ -12,7 +12,7 @@ export const Square = ({
 }: PropsWithChildren<{ square: TSquare }>) => {
   return (
     <div
-      className="grid gap-2 grid-rows-[repeat(3,_36px)] grid-cols-[repeat(3,_36px)]"
+      className="grid gap-2 grid-rows-[repeat(3,_32px)] grid-cols-[repeat(3,_32px)]"
       style={{
         gridTemplateAreas: getSquareTemplateAreas(square),
         gridColumn: getSquareGridColumn(square),

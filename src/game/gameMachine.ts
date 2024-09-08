@@ -8,6 +8,14 @@ import {
 import { Difficulty, generateSudoku, isGuessable } from "./board";
 import type { Coordinate, Board } from "../types";
 
+/**
+ * TODO
+ * - timer
+ * - candidate mode
+ * - hints
+ * - local storage
+ */
+
 type Input = {
   difficulty?: Difficulty;
 };

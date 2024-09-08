@@ -10,7 +10,7 @@ export const GameBoard = ({
   return (
     <div
       className={cn(
-        "grid w-fit gap-2 content-start grid-cols-[repeat(9,_36px)] grid-rows-[repeat(9,_36px)]",
+        "grid w-fit gap-2 content-start grid-cols-[repeat(9,_32px)] grid-rows-[repeat(9,_32px)]",
         className
       )}
       style={{ gridTemplateAreas: BOARD_TEMPLATE_AREAS }}

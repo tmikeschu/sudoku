@@ -82,7 +82,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
 
       <div
         className="grid gap-2 w-fit"
-        style={{ gridTemplateColumns: "repeat(9, 36px)" }}
+        style={{ gridTemplateColumns: "repeat(9, 32px)" }}
       >
         {NUMBERS.map((num) => (
           <Button

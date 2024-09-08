@@ -9,6 +9,7 @@ export const Cell = ({
 }: ButtonProps & { coordinate: Coordinate }) => {
   return (
     <Button
+      size="sm"
       style={{ gridArea: coordinateToGridArea(coordinate), ...rest.style }}
       variant="outline"
       {...rest}
