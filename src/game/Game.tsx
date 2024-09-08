@@ -1,4 +1,3 @@
-import { Grid, Flex, Button, Text, AlertDialog } from "@radix-ui/themes";
 import { GameActorRef } from "./gameMachine";
 import { NUMBERS } from "../types";
 import { getHighlightedCoordinates } from "./style-utils";
@@ -12,18 +11,29 @@ import { useSelector } from "@xstate/react";
 import { Square } from "./Square";
 import { Cell } from "./Cell";
 import { GameBoard } from "./GameBoard";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 export function Game({ actor }: { actor: GameActorRef }) {
   const { send } = actor;
 
   const state = actor.getSnapshot();
+  console.log(state.context.fillCoordinate);
 
   const highlights = useSelector(actor, getHighlightedCoordinates);
 
   const invalids = useSelector(actor, getInvalidCoordinates);
 
   return (
-    <Flex direction="column" gapY="4" align={"center"}>
+    <div className="flex flex-col gap-y-4 items-center">
       <GameBoard>
         {SQUARES.map((square, i) => (
           <Square key={i} square={square}>
@@ -35,13 +45,21 @@ export function Game({ actor }: { actor: GameActorRef }) {
                 <Cell
                   key={coordinate}
                   coordinate={coordinate}
+                  className={cn({
+                    "bg-transparent":
+                      !invalids.includes(coordinate) &&
+                      highlights.some(
+                        ({ coordinate: highlight }) => highlight === coordinate
+                      ),
+                  })}
                   onClick={() => send({ type: "cell.click", coordinate })}
-                  color={invalids.includes(coordinate) ? "red" : undefined}
-                  {...(coordinate === state.context.fillCoordinate
-                    ? { variant: "surface" }
+                  {...(invalids.includes(coordinate)
+                    ? { variant: "destructive" }
+                    : coordinate === state.context.fillCoordinate
+                    ? { variant: "secondary" }
                     : isGuessable(cell)
                     ? { variant: "outline" }
-                    : { variant: "soft" })}
+                    : { variant: "ghost" })}
                 >
                   {isGuessable(cell)
                     ? state.context.guesses.get(coordinate) ?? ""
@@ -53,75 +71,62 @@ export function Game({ actor }: { actor: GameActorRef }) {
         ))}
 
         {highlights.map(({ gridColumn, gridRow }) => (
-          <Grid
+          <div
+            className="grid bg-blue-200 opacity-50 -z-[1] rounded h-full w-full"
             key={`${gridRow},${gridColumn}`}
             aria-label={`${gridRow},${gridColumn} highlight`}
-            style={{
-              backgroundColor: "var(--accent-a7)",
-              opacity: 0.5,
-              zIndex: -1,
-              borderRadius: "4px",
-            }}
-            gridColumn={gridColumn}
-            gridRow={gridRow}
-            height="100%"
-            width="100%"
+            style={{ gridColumn, gridRow }}
           />
         ))}
       </GameBoard>
 
-      <Grid gap="2" columns="repeat(9, 32px)" width="fit-content">
+      <div
+        className="grid gap-2 w-fit"
+        style={{ gridTemplateColumns: "repeat(9, 36px)" }}
+      >
         {NUMBERS.map((num) => (
           <Button
             key={num}
-            color={state.context.fillNumber === num ? undefined : "gray"}
             variant={
               isNumberComplete({
                 board: state.context.board,
                 guesses: state.context.guesses,
                 number: num,
               })
-                ? "classic"
+                ? "secondary"
                 : state.context.fillNumber === num
-                ? "solid"
-                : "surface"
+                ? "default"
+                : "ghost"
             }
             onClick={() => send({ type: "fill_number.click", number: num })}
           >
             {num}
           </Button>
         ))}
-      </Grid>
+      </div>
 
-      <Flex justify="end">
-        <Button
-          variant="ghost"
-          color="red"
-          onClick={() => send({ type: "reveal" })}
-        >
+      <div className="flex justify-end">
+        <Button variant="destructive" onClick={() => send({ type: "reveal" })}>
           Reveal
         </Button>
-      </Flex>
-      <AlertDialog.Root open={state.matches("confirmReveal")}>
-        <AlertDialog.Content>
-          <AlertDialog.Title>Reveal?</AlertDialog.Title>
-          <AlertDialog.Description>
-            <Text>This will end the game.</Text>
-          </AlertDialog.Description>
-          <Flex justify="end" gap="2">
-            <AlertDialog.Cancel>
-              <Button color="gray" onClick={() => send({ type: "cancel" })}>
-                Cancel
-              </Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button color="red" onClick={() => send({ type: "confirm" })}>
-                Reveal
-              </Button>
-            </AlertDialog.Action>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
-    </Flex>
+      </div>
+
+      <AlertDialog open={state.matches("confirmReveal")}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Reveal?</AlertDialogTitle>
+          <AlertDialogDescription>
+            <span>This will end the game.</span>
+          </AlertDialogDescription>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel onClick={() => send({ type: "cancel" })}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => send({ type: "confirm" })}>
+              Reveal
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

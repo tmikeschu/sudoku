@@ -1,13 +1,7 @@
-import { ButtonProps } from "@radix-ui/themes";
-import {
-  COLUMNS,
-  isGuessable,
-  parseCoordinate,
-  ROWS,
-  Square,
-} from "./board";
+import { COLUMNS, isGuessable, parseCoordinate, ROWS, Square } from "./board";
 import { GameSnapshot } from "./gameMachine";
 import { Coordinate } from "../types";
+import { ButtonProps } from "@/components/ui/button";
 
 export const coordinateToGridArea = (coordinate: Coordinate): string => {
   return `c${coordinate.replace(",", "")}`;
@@ -70,13 +64,13 @@ export const getCellHighlightColor = (
 
 export const getHighlightedCoordinates = (
   snapshot: GameSnapshot
-): { gridColumn: string; gridRow: string }[] => {
+): { gridColumn: string; gridRow: string; coordinate: Coordinate }[] => {
   const { context } = snapshot;
   const { fillCoordinate } = context;
 
   const toGridDef = (coord: Coordinate) => {
     const area = coordinateToGridArea(coord);
-    return { gridColumn: area, gridRow: area };
+    return { gridColumn: area, gridRow: area, coordinate: coord };
   };
   if (snapshot.matches("coordinate") && fillCoordinate) {
     const [row, col] = parseCoordinate(fillCoordinate);

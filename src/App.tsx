@@ -1,8 +1,8 @@
 import { Game } from "./game/Game";
 import { AppMachineContext } from "./appMachine";
-import { Grid, Heading } from "@radix-ui/themes";
 import { NotStarted } from "./NotStarted";
 import { GameOver } from "./GameOver";
+import { H1 } from "@/components/ui/h1";
 
 function App() {
   const actor = AppMachineContext.useActorRef();
@@ -13,8 +13,8 @@ function App() {
   const board = gameRef?.getSnapshot().context.board;
 
   return (
-    <Grid gapY="4" maxWidth="352px" align="center" justify="center" mx="auto">
-      <Heading>Sudoku</Heading>
+    <div className="grid gap-y-4 max-w-[352px] content-center justify-items-center mx-auto">
+      <H1>Sudoku</H1>
 
       {state === "notStarted" ? (
         <NotStarted actor={actor} />
@@ -23,7 +23,7 @@ function App() {
       ) : state === "gameOver" && board ? (
         <GameOver actor={actor} board={board} />
       ) : null}
-    </Grid>
+    </div>
   );
 }
 

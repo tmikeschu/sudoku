@@ -1,30 +1,27 @@
-import { Button, Grid } from "@radix-ui/themes";
+import { Button } from "@/components/ui/button";
 import { AppMachineActorRef } from "./appMachine";
 
 export const NotStarted = ({ actor }: { actor: AppMachineActorRef }) => {
   return (
-    <Grid columns="repeat(3, 64px)" gap="2">
+    <div className="grid grid-cols-[repeat(3,_64px)] gap-2">
       <Button
         onClick={() => actor.send({ type: "start", difficulty: "easy" })}
-        color="green"
-        variant="soft"
+        variant="ghost"
       >
         Easy
       </Button>
       <Button
         onClick={() => actor.send({ type: "start", difficulty: "medium" })}
-        variant="soft"
-        color="blue"
+        variant="ghost"
       >
         Medium
       </Button>
       <Button
         onClick={() => actor.send({ type: "start", difficulty: "hard" })}
-        variant="soft"
-        color="purple"
+        variant="ghost"
       >
         Hard
       </Button>
-    </Grid>
+    </div>
   );
 };

@@ -1,4 +1,3 @@
-import { Grid } from "@radix-ui/themes";
 import { PropsWithChildren } from "react";
 import { Square as TSquare } from "./board";
 import {
@@ -12,15 +11,15 @@ export const Square = ({
   square,
 }: PropsWithChildren<{ square: TSquare }>) => {
   return (
-    <Grid
-      rows="repeat(3, 32px)"
-      columns="repeat(3, 32px)"
-      gap="2"
-      gridColumn={getSquareGridColumn(square)}
-      gridRow={getSquareGridRow(square)}
-      areas={getSquareTemplateAreas(square)}
+    <div
+      className="grid gap-2 grid-rows-[repeat(3,_36px)] grid-cols-[repeat(3,_36px)]"
+      style={{
+        gridTemplateAreas: getSquareTemplateAreas(square),
+        gridColumn: getSquareGridColumn(square),
+        gridRow: getSquareGridRow(square),
+      }}
     >
       {children}
-    </Grid>
+    </div>
   );
 };

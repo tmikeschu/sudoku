@@ -1,5 +1,5 @@
+import { Button, ButtonProps } from "@/components/ui/button";
 import { Coordinate } from "../types";
-import { Button, ButtonProps, Flex, Text } from "@radix-ui/themes";
 import { coordinateToGridArea } from "./style-utils";
 
 export const Cell = ({
@@ -10,12 +10,12 @@ export const Cell = ({
   return (
     <Button
       style={{ gridArea: coordinateToGridArea(coordinate), ...rest.style }}
-      variant="soft"
+      variant="outline"
       {...rest}
     >
-      <Flex justify="center" align="center">
-        <Text>{children}</Text>
-      </Flex>
+      <div className="flex justify-center items-center">
+        <span>{children}</span>
+      </div>
     </Button>
   );
 };

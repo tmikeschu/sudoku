@@ -1,36 +1,34 @@
-import { Grid, GridProps } from "@radix-ui/themes";
 import { BOARD_TEMPLATE_AREAS, getSquareGridShading } from "./style-utils";
 import { SQUARES } from "./board";
+import { cn } from "@/lib/utils";
 
-export const GameBoard = ({ children, ...props }: GridProps) => {
+export const GameBoard = ({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
   return (
-    <Grid
-      width="fit-content"
-      rows="repeat(9, 32px)"
-      columns="repeat(9, 32px)"
-      areas={BOARD_TEMPLATE_AREAS}
-      gap="2"
-      align="start"
+    <div
+      className={cn(
+        "grid w-fit gap-2 content-start grid-cols-[repeat(9,_36px)] grid-rows-[repeat(9,_36px)]",
+        className
+      )}
+      style={{ gridTemplateAreas: BOARD_TEMPLATE_AREAS }}
       {...props}
     >
       {children}
 
       {SQUARES.filter((_, i) => i % 2 === 1).map((square, i) => (
-        <Grid
+        <div
           key={i}
+          className="grid -z-[2] justify-self-end bg-gray-100 rounded -mt-[5px] -mr-[5px]"
           style={{
-            border: "2px solid var(--gray-a6)",
-            zIndex: -1,
-            justifySelf: "end",
-            borderRadius: "4px",
-            marginTop: "-5px",
-            marginRight: "-5px",
+            height: "calc(100% + 10px)",
+            width: "calc(100% + 10px)",
+            ...getSquareGridShading(square),
           }}
-          {...getSquareGridShading(square)}
-          height="calc(100% + 10px)"
-          width="calc(100% + 10px)"
         />
       ))}
-    </Grid>
+    </div>
   );
 };

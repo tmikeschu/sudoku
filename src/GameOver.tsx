@@ -1,10 +1,10 @@
-import { Button, Grid } from "@radix-ui/themes";
 import { AppMachineActorRef } from "./appMachine";
 import { Board } from "./types";
 import { GameBoard } from "./game/GameBoard";
 import { isGuessable, SQUARES } from "./game/board";
 import { Square } from "./game/Square";
 import { Cell } from "./game/Cell";
+import { Button } from "@/components/ui/button";
 
 export const GameOver = ({
   actor,
@@ -14,7 +14,7 @@ export const GameOver = ({
   board: Board;
 }) => {
   return (
-    <Grid style={{ justifyItems: "flex-start" }} gapY="4">
+    <div className="grid gap-y-4 justify-items-start">
       <GameBoard>
         {SQUARES.map((square, i) => (
           <Square key={i} square={square}>
@@ -29,7 +29,7 @@ export const GameOver = ({
                   coordinate={coordinate}
                   {...(isGuessable(cell)
                     ? { variant: "outline" }
-                    : { variant: "soft" })}
+                    : { variant: "ghost" })}
                 >
                   {isGuessable(cell) ? cell.meta?.original : cell.value}
                 </Cell>
@@ -39,9 +39,7 @@ export const GameOver = ({
         ))}
       </GameBoard>
 
-      <Button onClick={() => actor.send({ type: "reset" })} color="gray">
-        Restart
-      </Button>
-    </Grid>
+      <Button onClick={() => actor.send({ type: "reset" })}>Restart</Button>
+    </div>
   );
 };

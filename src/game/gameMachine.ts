@@ -212,6 +212,7 @@ export const gameMachine = setup({
         "cell.click": [
           {
             target: "idle",
+            actions: "clearFillCoordinate",
             guard: {
               type: "clickedCurrentFillCoordinate",
               params: ({
