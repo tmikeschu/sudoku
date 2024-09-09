@@ -24,9 +24,7 @@ export const GameOver = ({
               key={coordinate}
               disabled
               coordinate={coordinate}
-              {...(isGuessable(cell)
-                ? { variant: "outline" }
-                : { variant: "ghost" })}
+              className={isGuessable(cell) ? "" : "bg-gray-200"}
             >
               {isGuessable(cell) ? cell.meta?.original : cell.value}
             </Cell>

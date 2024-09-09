@@ -18,6 +18,7 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
@@ -124,14 +125,14 @@ export function Game({ actor }: { actor: GameActorRef }) {
           <AlertDialogDescription>
             <span>This will end the game.</span>
           </AlertDialogDescription>
-          <div className="flex justify-end gap-2">
+          <AlertDialogFooter>
             <AlertDialogCancel onClick={() => send({ type: "cancel" })}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={() => send({ type: "confirm" })}>
               Reveal
             </AlertDialogAction>
-          </div>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
