@@ -51,7 +51,7 @@ export const SQUARES: Square[] = [
   ],
 ];
 
-const COORDINATES: Coordinate[] = Object.values(SQUARES).flat(2).sort();
+export const COORDINATES: Coordinate[] = Object.values(SQUARES).flat(2).sort();
 
 export const parseCoordinate = (raw: string): [Row, Column] => {
   return raw.split(",").map(Number) as [Row, Column];
@@ -98,13 +98,17 @@ function getPeerCoordinates(coordinate: Coordinate): Coordinate[] {
 
 function getPeers(
   board: Board,
-  coordinate: Coordinate
+  coordinate: Coordinate,
+  guesses?: Map<Coordinate, number>
 ): { coordinate: Coordinate; value: number }[] {
   const peers = getPeerCoordinates(coordinate);
 
   return [
     ...new Set(
-      [...peers].map((c) => ({ coordinate: c, value: board.get(c)?.value }))
+      [...peers].map((c) => ({
+        coordinate: c,
+        value: guesses?.get(c) ?? board.get(c)?.value,
+      }))
     ),
   ].filter(
     (x): x is { coordinate: Coordinate; value: number } =>
@@ -112,8 +116,12 @@ function getPeers(
   );
 }
 
-function getPeerValues(board: Board, coordinate: Coordinate): number[] {
-  return getPeers(board, coordinate).map(({ value }) => value);
+function getPeerValues(
+  board: Board,
+  coordinate: Coordinate,
+  guesses?: Map<Coordinate, number>
+): number[] {
+  return getPeers(board, coordinate, guesses).map(({ value }) => value);
 }
 
 function isValidCoordinate(coordinate: Coordinate): boolean {
@@ -199,7 +207,7 @@ export function getInvalidCoordinates(snapshot: GameSnapshot): Coordinate[] {
   const { board, guesses } = snapshot.context;
 
   const peerMap = [...guesses.entries()].reduce((acc, [coord]) => {
-    acc[coord] = getPeers(board, coord);
+    acc[coord] = getPeers(board, coord, guesses);
     return acc;
   }, {} as Record<Coordinate, { coordinate: Coordinate; value: number }[]>);
 

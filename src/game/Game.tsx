@@ -1,14 +1,14 @@
 import { GameActorRef } from "./gameMachine";
 import { NUMBERS } from "../types";
-import { getHighlightedCoordinates } from "./style-utils";
+import { coordinateToGridArea, getHighlightedCoordinates } from "./style-utils";
 import {
+  COORDINATES,
   getInvalidCoordinates,
   isGuessable,
   isNumberComplete,
   SQUARES,
 } from "./board";
 import { useSelector } from "@xstate/react";
-import { Square } from "./Square";
 import { Cell } from "./Cell";
 import { GameBoard } from "./GameBoard";
 import { Button } from "@/components/ui/button";
@@ -21,58 +21,66 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { Small } from "@/components/ui/small";
 
 export function Game({ actor }: { actor: GameActorRef }) {
   const { send } = actor;
 
   const state = actor.getSnapshot();
-  console.log(state.context.fillCoordinate);
 
   const highlights = useSelector(actor, getHighlightedCoordinates);
 
   const invalids = useSelector(actor, getInvalidCoordinates);
 
+  const squares = SQUARES.filter((_, i) => i % 2 === 1).flat(2);
+
   return (
     <div className="flex flex-col gap-y-4 items-center">
+      <Small>{state.context.difficulty}</Small>
       <GameBoard>
-        {SQUARES.map((square, i) => (
-          <Square key={i} square={square}>
-            {square.flat().map((coordinate) => {
-              const cell = state.context.board.get(coordinate);
-              if (!cell) return null;
+        {COORDINATES.map((coordinate) => {
+          const cell = state.context.board.get(coordinate);
+          if (!cell) return null;
+          return (
+            <Cell
+              key={coordinate}
+              coordinate={coordinate}
+              className={cn({
+                "bg-transparent":
+                  squares.includes(coordinate) ||
+                  (!invalids.includes(coordinate) &&
+                    highlights.some(
+                      ({ coordinate: highlight }) => highlight === coordinate
+                    )),
+              })}
+              onClick={() => send({ type: "cell.click", coordinate })}
+              disabled={!isGuessable(cell)}
+              {...(invalids.includes(coordinate)
+                ? { variant: "destructive" }
+                : coordinate === state.context.fillCoordinate
+                ? { variant: "secondary" }
+                : // : isGuessable(cell)
+                  { variant: "outline" })}
+              // : { variant: "ghost" })}
+            >
+              {isGuessable(cell)
+                ? state.context.guesses.get(coordinate) ?? ""
+                : cell.value}
+            </Cell>
+          );
+        })}
 
-              return (
-                <Cell
-                  key={coordinate}
-                  coordinate={coordinate}
-                  className={cn({
-                    "bg-transparent":
-                      !invalids.includes(coordinate) &&
-                      highlights.some(
-                        ({ coordinate: highlight }) => highlight === coordinate
-                      ),
-                  })}
-                  onClick={() => send({ type: "cell.click", coordinate })}
-                  {...(invalids.includes(coordinate)
-                    ? { variant: "destructive" }
-                    : coordinate === state.context.fillCoordinate
-                    ? { variant: "secondary" }
-                    : isGuessable(cell)
-                    ? { variant: "outline" }
-                    : { variant: "ghost" })}
-                >
-                  {isGuessable(cell)
-                    ? state.context.guesses.get(coordinate) ?? ""
-                    : cell.value}
-                </Cell>
-              );
-            })}
-          </Square>
+        {squares.map((coord) => (
+          <div
+            className="grid bg-gray-200 opacity-50 -z-[1] h-full w-full"
+            key={coord}
+            style={{ gridArea: coordinateToGridArea(coord) }}
+          />
         ))}
 
         {highlights.map(({ gridColumn, gridRow }) => (
           <div
-            className="grid bg-blue-200 opacity-50 -z-[1] rounded h-full w-full"
+            className="grid bg-blue-500 opacity-50 -z-[1] h-full w-full"
             key={`${gridRow},${gridColumn}`}
             aria-label={`${gridRow},${gridColumn} highlight`}
             style={{ gridColumn, gridRow }}
@@ -80,13 +88,12 @@ export function Game({ actor }: { actor: GameActorRef }) {
         ))}
       </GameBoard>
 
-      <div
-        className="grid gap-2 w-fit"
-        style={{ gridTemplateColumns: "repeat(9, 32px)" }}
-      >
+      <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full justify-items-center">
         {NUMBERS.map((num) => (
           <Button
             key={num}
+            size="default"
+            className="text-lg w-12 h-12"
             variant={
               isNumberComplete({
                 board: state.context.board,

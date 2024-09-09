@@ -32,6 +32,7 @@ export type Context = {
   guesses: Map<Coordinate, number>;
   fillNumber?: number;
   fillCoordinate?: Coordinate;
+  difficulty: Difficulty;
 };
 
 export const gameMachine = setup({
@@ -129,7 +130,6 @@ export const gameMachine = setup({
       _,
       params: { board: Board; guesses: Map<Coordinate, number> }
     ) => {
-      console.log({ board: params.board, guesses: params.guesses });
       return [...params.board.entries()].every(([coord, cell]) =>
         isGuessable(cell)
           ? cell.meta?.original === params.guesses.get(coord)
@@ -139,6 +139,7 @@ export const gameMachine = setup({
   },
 }).createMachine({
   context: ({ input }) => ({
+    difficulty: input.difficulty ?? "easy",
     board: generateSudoku(input.difficulty ?? "easy"),
     guesses: new Map(),
     fillNumber: undefined,

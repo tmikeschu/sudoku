@@ -1,5 +1,4 @@
-import { BOARD_TEMPLATE_AREAS, getSquareGridShading } from "./style-utils";
-import { SQUARES } from "./board";
+import { BOARD_TEMPLATE_AREAS } from "./style-utils";
 import { cn } from "@/lib/utils";
 
 export const GameBoard = ({
@@ -9,26 +8,11 @@ export const GameBoard = ({
 }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
-      className={cn(
-        "grid w-fit gap-2 content-start grid-cols-[repeat(9,_32px)] grid-rows-[repeat(9,_32px)]",
-        className
-      )}
+      className={cn("grid content-start grid-cols-9", className)}
       style={{ gridTemplateAreas: BOARD_TEMPLATE_AREAS }}
       {...props}
     >
       {children}
-
-      {SQUARES.filter((_, i) => i % 2 === 1).map((square, i) => (
-        <div
-          key={i}
-          className="grid -z-[2] justify-self-end bg-gray-100 rounded -mt-[5px] -mr-[5px]"
-          style={{
-            height: "calc(100% + 10px)",
-            width: "calc(100% + 10px)",
-            ...getSquareGridShading(square),
-          }}
-        />
-      ))}
     </div>
   );
 };

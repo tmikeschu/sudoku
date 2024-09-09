@@ -35,7 +35,7 @@ export const appMachine = setup({
     playing: {
       on: {
         quit: "notStarted",
-        gameOver: { target: "gameOver", actions: console.log },
+        gameOver: { target: "gameOver" },
       },
     },
     gameOver: {
