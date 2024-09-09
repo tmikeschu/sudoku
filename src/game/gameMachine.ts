@@ -7,6 +7,7 @@ import {
 } from "xstate";
 import { Difficulty, generateSudoku, isGuessable } from "./board";
 import type { Coordinate, Board } from "../types";
+import { toast } from "sonner";
 
 /**
  * TODO
@@ -114,6 +115,9 @@ export const gameMachine = setup({
         return new Map(originals);
       },
     }),
+    successToast: () => {
+      toast.success("Board complete!");
+    },
   },
   guards: {
     clickedExistingFillNumber: (
@@ -154,6 +158,7 @@ export const gameMachine = setup({
         type: "puzzleIsComplete",
         params: ({ context: { board, guesses } }) => ({ board, guesses }),
       },
+      actions: "successToast",
     },
   ],
   states: {
