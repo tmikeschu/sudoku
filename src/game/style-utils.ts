@@ -1,22 +1,9 @@
-import { COLUMNS, isGuessable, parseCoordinate, ROWS, Square } from "./board";
+import { COLUMNS, isGuessable, parseCoordinate, ROWS } from "./board";
 import { GameSnapshot } from "./gameMachine";
 import { Coordinate } from "../types";
 
 export const coordinateToGridArea = (coordinate: Coordinate): string => {
   return `c${coordinate.replace(",", "")}`;
-};
-
-export const getSquareTemplateAreas = (square: Square) =>
-  square.map((row) => `"${row.map(coordinateToGridArea).join(" ")}"`).join(" ");
-
-export const getSquareGridColumn = (square: Square) => {
-  const [first, , last] = square[0].map(coordinateToGridArea);
-  return [first, last].join(" / ");
-};
-
-export const getSquareGridRow = (square: Square) => {
-  const [first, last] = square.map((x) => x[0]).map(coordinateToGridArea);
-  return [first, last].join(" / ");
 };
 
 export const BOARD_TEMPLATE_AREAS = [...ROWS.entries()]
@@ -26,33 +13,29 @@ export const BOARD_TEMPLATE_AREAS = [...ROWS.entries()]
 
 export const getHighlightedCoordinates = (
   snapshot: GameSnapshot
-): { gridColumn: string; gridRow: string; coordinate: Coordinate }[] => {
+): Set<Coordinate> => {
   const { context } = snapshot;
   const { fillCoordinate } = context;
 
-  const toGridDef = (coord: Coordinate) => {
-    const area = coordinateToGridArea(coord);
-    return { gridColumn: area, gridRow: area, coordinate: coord };
-  };
   if (snapshot.matches("coordinate") && fillCoordinate) {
     const [row, col] = parseCoordinate(fillCoordinate);
-    return [
-      ...new Set([...(ROWS.get(row) ?? []), ...(COLUMNS.get(col) ?? [])]),
-    ].map(toGridDef);
+    return new Set([...(ROWS.get(row) ?? []), ...(COLUMNS.get(col) ?? [])]);
   }
 
   if (snapshot.matches("fill") && context.fillNumber) {
     const { fillNumber, guesses, board } = context;
-    const matches = [...board.entries()]
-      .filter(([coord, cell]) =>
-        isGuessable(cell)
-          ? guesses.get(coord) === fillNumber
-          : cell.value === fillNumber
-      )
-      .map(([coord]) => toGridDef(coord));
+    const matches = new Set(
+      [...board.entries()]
+        .filter(([coord, cell]) =>
+          isGuessable(cell)
+            ? guesses.get(coord) === fillNumber
+            : cell.value === fillNumber
+        )
+        .map(([coord]) => coord)
+    );
 
-    return matches;
+    return new Set(matches);
   }
 
-  return [];
+  return new Set();
 };

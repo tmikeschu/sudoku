@@ -1,6 +1,6 @@
 import { GameActorRef } from "./gameMachine";
 import { NUMBERS } from "../types";
-import { coordinateToGridArea, getHighlightedCoordinates } from "./style-utils";
+import { getHighlightedCoordinates } from "./style-utils";
 import {
   COORDINATES,
   getInvalidCoordinates,
@@ -33,7 +33,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
 
   const invalids = useSelector(actor, getInvalidCoordinates);
 
-  const squares = SQUARES.filter((_, i) => i % 2 === 1).flat(2);
+  const squares = new Set(SQUARES.filter((_, i) => i % 2 === 1).flat(2));
 
   return (
     <div className="flex flex-col gap-y-4 items-center">
@@ -46,23 +46,19 @@ export function Game({ actor }: { actor: GameActorRef }) {
             <Cell
               key={coordinate}
               coordinate={coordinate}
-              className={cn({
-                "bg-transparent":
-                  squares.includes(coordinate) ||
-                  (!invalids.includes(coordinate) &&
-                    highlights.some(
-                      ({ coordinate: highlight }) => highlight === coordinate
-                    )),
-              })}
-              onClick={() => send({ type: "cell.click", coordinate })}
-              disabled={!isGuessable(cell)}
-              {...(invalids.includes(coordinate)
-                ? { variant: "destructive" }
-                : coordinate === state.context.fillCoordinate
-                ? { variant: "secondary" }
-                : // : isGuessable(cell)
-                  { variant: "outline" })}
-              // : { variant: "ghost" })}
+              variant={invalids.has(coordinate) ? "destructive" : "outline"}
+              className={cn(
+                !invalids.has(coordinate) && {
+                  "bg-gray-200": squares.has(coordinate),
+                  "bg-blue-300": highlights.has(coordinate),
+                },
+                !isGuessable(cell) ? "pointer-events-none" : "font-normal"
+              )}
+              {...(isGuessable(cell)
+                ? {
+                    onClick: () => send({ type: "cell.click", coordinate }),
+                  }
+                : {})}
             >
               {isGuessable(cell)
                 ? state.context.guesses.get(coordinate) ?? ""
@@ -70,23 +66,6 @@ export function Game({ actor }: { actor: GameActorRef }) {
             </Cell>
           );
         })}
-
-        {squares.map((coord) => (
-          <div
-            className="grid bg-gray-200 opacity-50 -z-[1] h-full w-full"
-            key={coord}
-            style={{ gridArea: coordinateToGridArea(coord) }}
-          />
-        ))}
-
-        {highlights.map(({ gridColumn, gridRow }) => (
-          <div
-            className="grid bg-blue-500 opacity-50 -z-[1] h-full w-full"
-            key={`${gridRow},${gridColumn}`}
-            aria-label={`${gridRow},${gridColumn} highlight`}
-            style={{ gridColumn, gridRow }}
-          />
-        ))}
       </GameBoard>
 
       <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full justify-items-center">

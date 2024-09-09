@@ -203,7 +203,7 @@ export function isGuessable(cell?: Cell) {
   return cell?.value === 0;
 }
 
-export function getInvalidCoordinates(snapshot: GameSnapshot): Coordinate[] {
+export function getInvalidCoordinates(snapshot: GameSnapshot): Set<Coordinate> {
   const { board, guesses } = snapshot.context;
 
   const peerMap = [...guesses.entries()].reduce((acc, [coord]) => {
@@ -211,18 +211,20 @@ export function getInvalidCoordinates(snapshot: GameSnapshot): Coordinate[] {
     return acc;
   }, {} as Record<Coordinate, { coordinate: Coordinate; value: number }[]>);
 
-  return [...guesses.entries()]
-    .filter(([coord, guess]) => {
-      const cell = board.get(coord);
-      if (!cell) return false;
-      return peerMap[coord].map(({ value }) => value).includes(guess);
-    })
-    .flatMap(([coord, guess]) => [
-      coord,
-      ...peerMap[coord]
-        .filter((x) => x.value === guess)
-        .map((x) => x.coordinate),
-    ]);
+  return new Set(
+    [...guesses.entries()]
+      .filter(([coord, guess]) => {
+        const cell = board.get(coord);
+        if (!cell) return false;
+        return peerMap[coord].map(({ value }) => value).includes(guess);
+      })
+      .flatMap(([coord, guess]) => [
+        coord,
+        ...peerMap[coord]
+          .filter((x) => x.value === guess)
+          .map((x) => x.coordinate),
+      ])
+  );
 }
 
 export const getBoardValueString = (board: Board): string => {
