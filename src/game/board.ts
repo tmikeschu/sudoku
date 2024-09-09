@@ -136,6 +136,7 @@ function isValid(board: Board, coordinate: Coordinate, num: number): boolean {
   return !peerValues.includes(num);
 }
 
+// TODO current alg has boards with multiple solutions
 function fillBoard(board: Board): Board {
   const copy = new Map(JSON.parse(JSON.stringify([...board]))) as Board;
 
