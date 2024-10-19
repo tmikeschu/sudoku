@@ -136,40 +136,59 @@ function isValid(board: Board, coordinate: Coordinate, num: number): boolean {
   return !peerValues.includes(num);
 }
 
-// TODO current alg has boards with multiple solutions
-function fillBoard(board: Board): Board {
-  const copy = new Map(JSON.parse(JSON.stringify([...board]))) as Board;
+function fillBoard(board: Board): Board | null {
+  const emptyCell = findEmptyCell(board);
+  if (!emptyCell) return board; // Board is complete
 
-  for (const coord of COORDINATES) {
-    const peerValues = getPeerValues(board, coord);
-    const randomNums = Array.from({ length: 9 }, (_, k) => k + 1)
-      .filter((x) => !peerValues.includes(x))
-      .sort(() => Math.random() - 0.5);
+  const numbers = shuffleArray(Array.from({ length: 9 }, (_, i) => i + 1));
 
-    for (const num of randomNums) {
-      if (isValid(copy, coord, num)) {
-        copy.set(coord, {
-          value: num,
-          meta: { original: num },
-        });
-        break;
+  for (const num of numbers) {
+    if (isValid(board, emptyCell, num)) {
+      board.set(emptyCell, {
+        value: num,
+        meta: { original: num },
+      });
+
+      if (fillBoard(board)) {
+        return board; // Solution found
       }
-    }
-    if (isGuessable(copy.get(coord))) {
-      return fillBoard(board);
+
+      // If placing the number doesn't lead to a solution, backtrack
+      board.set(emptyCell, { value: 0 });
     }
   }
 
-  return copy;
+  return null; // No valid number can be placed
+}
+
+function findEmptyCell(board: Board): Coordinate | null {
+  for (const coord of COORDINATES) {
+    if (isGuessable(board.get(coord))) {
+      return coord;
+    }
+  }
+  return null;
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 function generateCompleteBoard(): Board {
-  const board: Board = COORDINATES.reduce((acc, coordinate) => {
-    acc.set(coordinate, { value: 0 });
-    return acc;
-  }, new Map() as Board);
+  const board: Board = new Map(
+    COORDINATES.map((coord) => [coord, { value: 0 }])
+  );
 
-  return fillBoard(board);
+  const filledBoard = fillBoard(board);
+  if (!filledBoard) {
+    throw new Error("Failed to generate a valid Sudoku board");
+  }
+
+  return filledBoard;
 }
 
 function removeNumbers(board: Board, numHoles: number): Board {
