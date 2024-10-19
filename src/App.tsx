@@ -10,7 +10,8 @@ function App() {
   const gameRef = AppMachineContext.useSelector(
     (s) => s.context.gameMachineRef
   );
-  const board = gameRef?.getSnapshot().context.board;
+  const gameState = gameRef?.getSnapshot();
+  const { board, difficulty } = gameState?.context ?? {};
 
   return (
     <div className="grid gap-y-4 max-w-[400px] px-4 md:px-0 content-center justify-items-center mx-auto">
@@ -21,7 +22,7 @@ function App() {
       ) : state === "playing" && gameRef ? (
         <Game actor={gameRef} />
       ) : state === "gameOver" && board ? (
-        <GameOver actor={actor} board={board} />
+        <GameOver actor={actor} board={board} difficulty={difficulty} />
       ) : null}
     </div>
   );

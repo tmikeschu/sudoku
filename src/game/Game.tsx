@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { Small } from "@/components/ui/small";
+import { Dot } from "@/game/Dot";
 
 export function Game({ actor }: { actor: GameActorRef }) {
   const { send } = actor;
@@ -42,6 +43,9 @@ export function Game({ actor }: { actor: GameActorRef }) {
         {COORDINATES.map((coordinate) => {
           const cell = state.context.board.get(coordinate);
           if (!cell) return null;
+          const val = isGuessable(cell)
+            ? state.context.guesses.get(coordinate) ?? ""
+            : cell.value;
           return (
             <Cell
               key={coordinate}
@@ -60,9 +64,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
                   }
                 : {})}
             >
-              {isGuessable(cell)
-                ? state.context.guesses.get(coordinate) ?? ""
-                : cell.value}
+              <Dot value={val} />
             </Cell>
           );
         })}
@@ -73,7 +75,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
           <Button
             key={num}
             size="default"
-            className="text-lg w-12 h-12"
+            className=""
             variant={
               isNumberComplete({
                 board: state.context.board,
@@ -87,7 +89,7 @@ export function Game({ actor }: { actor: GameActorRef }) {
             }
             onClick={() => send({ type: "fill_number.click", number: num })}
           >
-            {num}
+            <Dot value={num} />
           </Button>
         ))}
       </div>

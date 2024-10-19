@@ -16,9 +16,7 @@ export const Cell = ({
       variant="outline"
       {...rest}
     >
-      <div className="flex justify-center items-center">
-        <span>{children}</span>
-      </div>
+      <div className="flex justify-center items-center">{children}</div>
     </Button>
   );
 };
